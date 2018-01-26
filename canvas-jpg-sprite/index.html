@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Canvas Image Masking</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: #3b404a;
+            /* animation: color 3s linear alternate infinite; */
+        }
+
+        @keyframes color {
+            from {
+                background: #3b404a;
+            }
+            to {
+                background: #e2aa30;
+            }
+        }
+
+        #output {
+            margin: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="output"></canvas>
+
+    <script>
+        function loadImage(url) {
+            return new Promise((resolve, reject) => {
+                let img = document.createElement('img');
+
+                img.onload = () => {
+                    img.onload = img.onerror = null;
+                    resolve(img);
+                }
+
+                img.onerror = (e) => {
+                    img.onload = img.onerror = null;
+                    img.remove();
+                    reject(e);
+                }
+
+                img.src = url;
+            })
+        }
+
+        let image = 'man.jpg';
+        let images = [image];
+
+        let [ naturalWidth, naturalHeight ] = [ 995, 2000 ];
+        let factor = 2;
+        let [ w, h ] = [ naturalWidth / factor, naturalHeight / factor ];
+
+        let outputCanvas = document.getElementById('output');
+        outputCanvas.width = w;
+        outputCanvas.height = h;
+        let outputCtx = outputCanvas.getContext('2d');
+
+        let bufferCanvas = document.createElement('canvas');
+        bufferCanvas.width = w * 2;
+        bufferCanvas.height = h;
+        let bufferCtx = bufferCanvas.getContext('2d');
+
+        function onStart([ image ]) {
+            // image
+            bufferCtx.drawImage(image,
+                0, 0, factor * w * 2, factor * h,
+                0, 0, w * 2, h
+            );
+
+            let original = bufferCtx.getImageData(0, 0, w, h);
+            let originalData = original.data;
+
+            // mask
+            let alphaData = bufferCtx.getImageData(w, 0, w, h).data;
+
+            for (let i = 3, len = originalData.length; i < len; i = i + 4) {
+                // можно сипользовать alphaData[i - 2] или alphaData[i - 1]
+                originalData[i] = alphaData[i - 3];
+            }
+
+            outputCtx.putImageData(original, 0, 0, 0, 0, w, h);
+            bufferCtx.clearRect(0, 0, w, h);
+        }
+
+        Promise.all(images.map(loadImage))
+            .then(onStart);
+    </script>
+</body>
+</html>

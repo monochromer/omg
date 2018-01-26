@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Canvas Image Masking</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            background: #3b404a;
+        }
+
+        #output {
+            margin: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="output"></canvas>
+
+    <script>
+        function loadImage(url) {
+            return new Promise((resolve, reject) => {
+                let img = document.createElement('img');
+
+                img.onload = () => {
+                    img.onload = img.onerror = null;
+                    resolve(img);
+                }
+
+                img.onerror = (e) => {
+                    img.onload = img.onerror = null;
+                    img.remove();
+                    reject(e);
+                }
+
+                img.src = url;
+            })
+        }
+
+        let image = 'man.jpg';
+        let mask = 'man-mask.jpg';
+        let images = [image, mask];
+
+        let [ naturalWidth, naturalHeight ] = [ 995, 2000 ];
+        let factor = 1;
+        let [ w, h ] = [ naturalWidth / factor, naturalHeight / factor ];
+
+        let outputCanvas = document.getElementById('output');
+        outputCanvas.width = w;
+        outputCanvas.height = h;
+        let outputCtx = outputCanvas.getContext('2d');
+
+        let bufferCanvas = document.createElement('canvas');
+        bufferCanvas.width = w;
+        bufferCanvas.height = h;
+        let bufferCtx = bufferCanvas.getContext('2d');
+
+        function onStart([ image, mask ]) {
+            bufferCtx.drawImage(image,
+                0, 0, factor * w, factor * h,
+                0, 0, w, h
+            );
+
+            let original = bufferCtx.getImageData(0, 0, w, h);
+            let originalData = original.data;
+
+            bufferCtx.drawImage(mask,
+                0, 0, factor * w, factor * h,
+                0, 0, w, h
+            );
+            let alpha = bufferCtx.getImageData(0, 0, w, h);
+            let alphaData = alpha.data;
+
+            for (let i = 3, len = originalData.length; i < len; i = i + 4) {
+                originalData[i] = alphaData[i - 1];
+            }
+
+            outputCtx.putImageData(original, 0, 0, 0, 0, w, h);
+            bufferCtx.clearRect(0, 0, w, h);
+        }
+
+        Promise.all(images.map(loadImage))
+            .then(onStart);
+    </script>
+</body>
+</html>

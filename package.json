@@ -1,0 +1,22 @@
+{
+  "scripts": {
+    "start": "nodemon server.js",
+    "prepare": "nodemon prepare.js",
+    "optimize": "node optimize.js",
+    "canvas-png": "browser-sync start --server --ss ./canvas-png --files ./canvas-png",
+    "canvas-jpg": "browser-sync start --server --ss ./canvas-jpg --files ./canvas-jpg",
+    "canvas-jpg-sprite": "browser-sync start --server --ss ./canvas-jpg-sprite --files ./canvas-jpg-sprite",
+    "svg-jpg": "browser-sync start --server --ss ./svg-jpg --files ./svg-jpg",
+    "svg-jpg-sprite": "browser-sync start --server --ss ./svg-jpg-sprite --files ./svg-jpg-sprite"
+  },
+  "devDependencies": {
+    "browser-sync": "2.23.5",
+    "compression": "1.7.1",
+    "imagemin": "5.3.1",
+    "imagemin-gifsicle": "5.2.0",
+    "imagemin-jpegtran": "5.0.2",
+    "imagemin-pngquant": "5.0.1",
+    "imagemin-svgo": "6.0.0",
+    "nodemon": "1.14.11"
+  }
+}

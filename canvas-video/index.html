@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Video Canvas Masking</title>
+    <style>
+        body {
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+            padding: 1em;
+            background: #fff;
+        }
+
+        #buffer,
+        #video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #output {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <video id="video" width="464" height="760" loop autoplay preload="metadata" muted playsinline>
+        <source src="weblogo_bg.mp4" type="video/mp4" />
+    </video>
+    <canvas id="buffer" width="464" height="760"></canvas>
+    <canvas id="output" width="464" height="380"></canvas>
+
+    <script>
+        var w = 464;
+        var h = 380;
+        var buffer = document.getElementById('buffer').getContext('2d');
+        var output = document.getElementById('output').getContext('2d');
+        var video = document.getElementById('video');
+        var frameId;
+
+        function processFrame() {
+            buffer.drawImage(video, 0, 0);
+            var image = buffer.getImageData(0, 0, w, h),
+                imageData = image.data,
+                alphaData = buffer.getImageData(0, h, w, h).data;
+            for (var i = 3, len = imageData.length; i < len; i = i + 4) {
+                imageData[i] = alphaData[i - 1];
+            }
+            output.putImageData(image, 0, 0, 0, 0, w, h);
+        }
+
+        function render() {
+            processFrame()
+            frameId = window.requestAnimationFrame(render);
+        }
+
+        video.addEventListener('loadedmetadata', function(e) {
+            console.log('loadedmetadata');
+            console.log('videoWidth: ', e.target.videoWidth, 'videoHeight: ', e.target.videoHeight);
+            console.log('duration: ', e.target.duration);
+        });
+
+        video.addEventListener('canplay', function onLoad(e) {
+            console.log('canplay');
+            frameId = window.requestAnimationFrame(render);
+        });
+
+        video.load();
+    </script>
+</body>
+</html>
