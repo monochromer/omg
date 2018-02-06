@@ -13,7 +13,7 @@ const {
 
 const fileExts = exts.map(ext => ext.slice(1)).join(',');
 
-imagemin([`${srcPath}/**/*.{${fileExts}}`], publicPath, {
+imagemin([`${srcPath}/**/*.{${fileExts}}`], `${publicPath}/resources/images`, {
   use: [
     imageminJpegtran({
       progressive: true

@@ -1,7 +1,16 @@
 const path = require('path');
+const { parse: parseUrl } = require('url');
 const fs = require('fs');
 const http = require('http');
+
 const browserSync = require('browser-sync').create();
+const mkdirp = require('mkdirp');
+
+function createIfNotExist(dir) {
+  return new Promise((resolve, reject) => {
+    mkdirp(dir, err => err ? reject(err): resolve());
+  });
+};
 
 const {
   publicPath,
@@ -11,20 +20,23 @@ const {
 } = require('./config');
 
 browserSync.init({
-  open: false,
   proxy: {
     target: siteURL,
     middleware: [
-      (req, res, next) => {
+      async function(req, res, next) {
         const url = req.url;
-        const filename = path.basename(url);
-        const ext = path.extname(url);
+        let filename = path.basename(url);
+        let ext = path.extname(url);
+        let { pathname } = parseUrl(url);
 
-        if (exts.indexOf(ext) < 0) {
-          return next();
+        if (ext === '') {
+          pathname += '/index.html';
         };
 
-        const file = fs.createWriteStream(path.join(srcPath, filename));
+        await createIfNotExist(path.join(srcPath, path.dirname(pathname)));
+
+        const file = fs.createWriteStream(path.join(srcPath, pathname));
+
         const request = http.get(siteURL + url, (response) => {
           response.pipe(file);
           next();
