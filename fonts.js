@@ -7,6 +7,7 @@ const chalk = require('chalk');
 const filesize = require('filesize');
 
 const execFile = promisify(childProcess.execFile);
+const stat = promisify(fs.stat);
 
 const mapArgsToArr = (o) => Object.keys(o)
   .filter(key => !!o[key])
@@ -26,8 +27,11 @@ async function processFont({ inputFile, outputFile, ...opts }) {
 
   const { stdout, stderr } = await execFile(utilityName, [ inputFile, ...mapArgsToArr(args) ]);
 
-  const inputStat = fs.statSync( inputFile );
-  const outputStat = fs.statSync( outputFile );
+  const [ inputStat, outputStat ] = await Promise.all([
+    stat(inputFile),
+    stat(outputFile)
+  ]);
+
   console.log(
     'input: ' + inputFile + ' ' + chalk.red(filesize(inputStat.size)) + '\n' +
     'putput: ' + outputFile + ' ' + chalk.green(filesize(outputStat.size))
